@@ -1,0 +1,29 @@
+{
+  "uart": {
+    "name": "COM6",
+    "baudrate": 9600
+  },
+  "spi": {
+    "cs": {
+      "port": 0,
+      "pin": 0
+    },
+    "clk": {
+      "port": 0,
+      "pin": 1
+    },
+    "mosi": {
+      "port": 0,
+      "pin": 2
+    },
+    "miso": {
+      "port": 0,
+      "pin": 3
+    }
+  },
+  "flash": {
+    "command": "write",
+    "file": "E:\\test.hex.bin",
+    "address": 0
+  }
+}
