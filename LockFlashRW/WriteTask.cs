@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -93,6 +94,15 @@ namespace LockFlashRW
             task = new Task(action);
         }
 
+        private void DumpBytes(string prefix, byte[] buf)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.Append(prefix);
+            foreach (byte b in buf)
+                builder.AppendFormat(" {0:X2}", b);
+            logger.Debug(builder.ToString());
+        }
+
         private bool SendPacket(byte[] packet, SerialPacket.Command cmd)
         {
             waitingCommand = (byte)cmd;
@@ -102,6 +112,7 @@ namespace LockFlashRW
             int tx = 3;
             while (tx-- > 0)
             {
+                DumpBytes("发送:", packet);
                 comport.Write(packet, 0, packet.Length);
                 if (eventWaitHandle.WaitOne(100))
                 {
@@ -132,6 +143,7 @@ namespace LockFlashRW
                 if (r == -1)
                     break;
 
+                DumpBytes("接收:", packet);
                 if (SerialPacket.GetResult(packet, out byte cmd, out byte result))
                 {
                     logger.Info("接收 cmd=0x{0:X}, result=0x{1:X}", cmd, result);

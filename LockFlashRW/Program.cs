@@ -70,7 +70,7 @@ namespace LockFlashRW
             // Rules for mapping loggers to targets            
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, logdebug);
             config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
 
             // Apply config           
             LogManager.Configuration = config;
