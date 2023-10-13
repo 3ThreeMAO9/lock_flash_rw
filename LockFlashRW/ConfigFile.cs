@@ -78,8 +78,8 @@ namespace LockFlashRW
     {
         public SpiConfig spi { get; set; }
         public UartConfig uart { get; set; }
-
         public FlashConfig flash { get; set; }
+        public uint retry { get; set; } = 100;
     }
 
     internal class ConfigFile
@@ -87,6 +87,7 @@ namespace LockFlashRW
         public SpiConfig spi { get; }
         public UartConfig uart { get; }
         public FlashConfig flash { get; }
+        public int retry { get; }
 
         public ConfigFile(string path)
         {
@@ -100,6 +101,7 @@ namespace LockFlashRW
                     this.uart = config.uart;
                 if (config.flash != null)
                     this.flash = config.flash;
+                this.retry = (int)config.retry;
             }
         }
 

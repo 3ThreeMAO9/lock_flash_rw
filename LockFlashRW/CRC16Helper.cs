@@ -73,28 +73,24 @@ namespace LockFlashRW
             return crc;
         }
 
-        public static ushort Compute(byte[] buf, int length)
+        public static ushort Compute(byte[] buf, int offset, int length)
         {
-            ushort crc = DoCompute(buf, 0, length,
+            return DoCompute(buf, offset, length,
                 false, false, POLYNOMIAL,
                 0x0000, 0x0000, 0x8000, 0xFFFF);
-
-            int t = crc >> 8;
-            t |= (crc & 0xFF) << 8;
-            return (ushort)t;
         }
 
         public static ushort Compute(List<byte> buf, int offset, int length)
         {
             byte[] tmp = new byte[length];
             buf.CopyTo(offset, tmp, 0, length);
-            return Compute(tmp, length);
+            return Compute(tmp, 0, length);
         }
 
         public static void Test()
         {
             byte[] buf = new byte[] { 0x00, 0x05, 0x01 };
-            ushort crc = CRC16Helper.Compute(buf, buf.Length);
+            ushort crc = CRC16Helper.Compute(buf, 0, buf.Length);
             Console.WriteLine("crc16 = {0:X4}", crc);
 
             byte[] tmp = new byte[5];

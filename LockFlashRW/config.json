@@ -23,7 +23,8 @@
   },
   "flash": {
     "command": "write",
-    "file": "E:\\test.hex.bin",
+    "file": "E:\\test.bin",
     "address": 0
-  }
+  },
+  "retry": 100
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace LockFlashRW
@@ -36,7 +37,7 @@ namespace LockFlashRW
             writer.Write(HEADER);
 
             ushort size = (ushort)(length + 5);
-            writer.Write(size);
+            writer.Write(ByteSwap(size));
             writer.Write((byte)cmd);
 
             return writer;
@@ -47,13 +48,40 @@ namespace LockFlashRW
             MemoryStream stream = writer.BaseStream as MemoryStream;
             byte[] buffer = stream.GetBuffer();
 
-            ushort crc = CRC16Helper.Compute(buffer, buffer.Length - 2);
-            writer.Write(crc);
+            ushort crc = CRC16Helper.Compute(buffer, 1, buffer.Length - 3);
+            writer.Write(ByteSwap(crc));
 
             writer.Close();
             stream.Close();
 
             return buffer;
+        }
+
+        static private ushort ByteSwap(ushort value)
+        {
+            byte[] b = BitConverter.GetBytes(value);
+            byte[] r = new byte[b.Length];
+            for (int i = 0; i < b.Length; i++)
+                r[i] = b[b.Length - 1 - i];
+            return BitConverter.ToUInt16(r, 0);
+        }
+
+        static private int ByteSwap(int value)
+        {
+            byte[] b = BitConverter.GetBytes(value);
+            byte[] r = new byte[b.Length];
+            for (int i = 0; i < b.Length; i++)
+                r[i] = b[b.Length - 1 - i];
+            return BitConverter.ToInt32(r, 0);
+        }
+
+        static private uint ByteSwap(uint value)
+        {
+            byte[] b = BitConverter.GetBytes(value);
+            byte[] r = new byte[b.Length];
+            for (int i = 0; i < b.Length; i++)
+                r[i] = b[b.Length - 1 - i];
+            return BitConverter.ToUInt32(r, 0);
         }
 
         static public byte[] FlashQuery()
@@ -83,15 +111,15 @@ namespace LockFlashRW
 
             BinaryWriter writer = GetWrite(Command.FLASH_ERASE, 5);
             writer.Write(type);
-            writer.Write(addr);
+            writer.Write(ByteSwap(addr));
             return GetBuffer(writer);
         }
 
-        static public byte[] FlashWrite(byte[] data, int offset, ushort length)
+        static public byte[] FlashWrite(byte[] data, int addr, int offset, ushort length)
         {
-            BinaryWriter writer = GetWrite(Command.FLASH_WRITE, 8 + length);
-            writer.Write(offset);
-            writer.Write(length);
+            BinaryWriter writer = GetWrite(Command.FLASH_WRITE, 6 + length);
+            writer.Write(ByteSwap(offset));
+            writer.Write(ByteSwap(length));
             writer.Write(data, offset, length);
             return GetBuffer(writer);
         }
@@ -99,16 +127,16 @@ namespace LockFlashRW
         static public byte[] FlashRead(uint addr, ushort length)
         {
             BinaryWriter writer = GetWrite(Command.FLASH_ERASE, 6);
-            writer.Write(addr);
-            writer.Write(length);
+            writer.Write(ByteSwap(addr));
+            writer.Write(ByteSwap(length));
             return GetBuffer(writer);
         }
 
-        static public byte[] FlashEraseAndWrite(byte[] data, int offset, int length)
+        static public byte[] FlashEraseAndWrite(byte[] data, int addr, int offset, ushort length)
         {
-            BinaryWriter writer = GetWrite(Command.FLASH_ERASE_AND_WRITE, 8 + length);
-            writer.Write(offset);
-            writer.Write(length);
+            BinaryWriter writer = GetWrite(Command.FLASH_ERASE_AND_WRITE, 6 + length);
+            writer.Write(ByteSwap(addr));
+            writer.Write(ByteSwap(length));
             writer.Write(data, offset, length);
             return GetBuffer(writer);
         }
@@ -122,8 +150,8 @@ namespace LockFlashRW
                 return false;
             }
 
-            cmd = packet[2];
-            result = packet[3];
+            cmd = packet[3];
+            result = packet[4];
             return true;
         }
 
@@ -134,12 +162,12 @@ namespace LockFlashRW
                 if (list[i] != HEADER)
                     continue;
 
-                int length = list[i + 1] | (list[i + 2] << 8);
+                int length = list[i + 2] | (list[i + 1] << 8);
                 if ((length + 1) > list.Count)
                     continue;
 
-                ushort crc1 = CRC16Helper.Compute(list, i, length - 1);
-                ushort crc2 = (ushort)(list[i + length - 1] | (list[i + length] << 8));
+                ushort crc1 = CRC16Helper.Compute(list, i + 1, length - 2);
+                ushort crc2 = (ushort)(list[i + length] | (list[i + length - 1] << 8));
                 if (crc1 != crc2)
                     continue;
 

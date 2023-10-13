@@ -30,7 +30,7 @@ namespace LockFlashRW
 
             rx = new List<byte>();
             eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-
+            
             comport = new SerialPort
             {
                 PortName = config.uart.name,
@@ -47,6 +47,7 @@ namespace LockFlashRW
                 try
                 {
                     byte[] data = File.ReadAllBytes(config.flash.file);
+                    int addr = config.flash.address;
                     int offset = 0;
                     int rest = data.Length;
 
@@ -64,14 +65,15 @@ namespace LockFlashRW
                     while (rest > 0)
                     {
                         int tx = rest > 512 ? 512 : rest;
-                        logger.Info("写入数据, 偏移={0:X}, 长度={1}", offset, tx);
-                        packet = SerialPacket.FlashEraseAndWrite(data, offset, tx);
+                        logger.Info("写入数据, 偏移={0}, 长度={1}", offset, tx);
+                        packet = SerialPacket.FlashEraseAndWrite(data, addr, offset, (ushort)tx);
                         if (!SendPacket(packet, SerialPacket.Command.FLASH_ERASE_AND_WRITE))
                         {
                             logger.Error("写入失败");
                             return;
                         }
 
+                        addr += tx;
                         offset += tx;
                         rest -= tx;
                     }
@@ -81,7 +83,7 @@ namespace LockFlashRW
                 catch (Exception ex)
                 {
                     logger.Error("出错！！！");
-                    logger.ForExceptionEvent(ex);
+                    logger.Error(ex);
                 }
                 finally
                 {
@@ -96,7 +98,8 @@ namespace LockFlashRW
 
         private void DumpBytes(string prefix, byte[] buf)
         {
-            StringBuilder builder = new StringBuilder();
+            int total = prefix.Length + buf.Length * 3 + 1;
+            StringBuilder builder = new StringBuilder(total);
             builder.Append(prefix);
             foreach (byte b in buf)
                 builder.AppendFormat(" {0:X2}", b);
@@ -114,7 +117,7 @@ namespace LockFlashRW
             {
                 DumpBytes("发送:", packet);
                 comport.Write(packet, 0, packet.Length);
-                if (eventWaitHandle.WaitOne(100))
+                if (eventWaitHandle.WaitOne(config.retry))
                 {
                     waitingCommand = (byte)SerialPacket.Command.INVALID;
                     return true;
