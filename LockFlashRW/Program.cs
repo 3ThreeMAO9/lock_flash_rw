@@ -1,4 +1,5 @@
 ﻿using NLog;
+using NLog.Targets.Wrappers;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -67,10 +68,10 @@ namespace LockFlashRW
             var logdebug = new NLog.Targets.DebugSystemTarget();
             var logconsole = new NLog.Targets.ConsoleTarget();
 
-            // Rules for mapping loggers to targets            
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, logdebug);
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
+            // Rules for mapping loggers to targets
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, new AsyncTargetWrapper(logdebug));
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, new AsyncTargetWrapper(logfile));
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new AsyncTargetWrapper(logconsole));
 
             // Apply config           
             LogManager.Configuration = config;

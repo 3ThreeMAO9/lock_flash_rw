@@ -64,7 +64,7 @@ namespace LockFlashRW
 
                     while (rest > 0)
                     {
-                        int tx = rest > 512 ? 512 : rest;
+                        int tx = rest > config.max ? config.max : rest;
                         logger.Info("写入数据, 偏移={0}, 长度={1}", offset, tx);
                         packet = SerialPacket.FlashEraseAndWrite(data, addr, offset, (ushort)tx);
                         if (!SendPacket(packet, SerialPacket.Command.FLASH_ERASE_AND_WRITE))
@@ -158,8 +158,15 @@ namespace LockFlashRW
                     }
                 }
 
-                if (r > 0)
-                    rx.RemoveRange(0, r);
+                try
+                {
+                    if (r > 0)
+                        rx.RemoveRange(0, r);
+                }
+                catch
+                {
+                    rx.Clear();
+                }
             }
         }
 

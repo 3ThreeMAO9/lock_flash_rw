@@ -26,5 +26,6 @@
     "file": "E:\\test.bin",
     "address": 0
   },
-  "retry": 100
+  "retry": 1000,
+  "max": 1024
 }

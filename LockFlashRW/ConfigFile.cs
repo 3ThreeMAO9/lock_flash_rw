@@ -80,6 +80,7 @@ namespace LockFlashRW
         public UartConfig uart { get; set; }
         public FlashConfig flash { get; set; }
         public uint retry { get; set; } = 100;
+        public uint max { get; set; } = 512;
     }
 
     internal class ConfigFile
@@ -88,6 +89,7 @@ namespace LockFlashRW
         public UartConfig uart { get; }
         public FlashConfig flash { get; }
         public int retry { get; }
+        public int max { get; }
 
         public ConfigFile(string path)
         {
@@ -102,6 +104,7 @@ namespace LockFlashRW
                 if (config.flash != null)
                     this.flash = config.flash;
                 this.retry = (int)config.retry;
+                this.max = (int)config.max;
             }
         }
 
