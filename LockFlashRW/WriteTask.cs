@@ -98,6 +98,9 @@ namespace LockFlashRW
 
         private void DumpBytes(string prefix, byte[] buf)
         {
+            if (!config.dump)
+                return;
+
             int total = prefix.Length + buf.Length * 3 + 1;
             StringBuilder builder = new StringBuilder(total);
             builder.Append(prefix);

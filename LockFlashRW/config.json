@@ -27,5 +27,6 @@
     "address": 0
   },
   "retry": 1000,
-  "max": 1024
+  "max": 1024,
+  "dump": false
 }

@@ -81,6 +81,7 @@ namespace LockFlashRW
         public FlashConfig flash { get; set; }
         public uint retry { get; set; } = 100;
         public uint max { get; set; } = 512;
+        public bool dump { get; set; } = false;
     }
 
     internal class ConfigFile
@@ -90,6 +91,7 @@ namespace LockFlashRW
         public FlashConfig flash { get; }
         public int retry { get; }
         public int max { get; }
+        public bool dump { get; }
 
         public ConfigFile(string path)
         {
@@ -105,6 +107,7 @@ namespace LockFlashRW
                     this.flash = config.flash;
                 this.retry = (int)config.retry;
                 this.max = (int)config.max;
+                this.dump = config.dump;
             }
         }
 
