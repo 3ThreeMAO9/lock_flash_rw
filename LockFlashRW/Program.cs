@@ -11,6 +11,12 @@ namespace LockFlashRW
     {
         static void Run(ConfigFile config)
         {
+            if (config.flash.command.Trim() != "write")
+            {
+                Console.WriteLine("目前只支持flash.command: \"write\"");
+                return;
+            }
+
             if (!File.Exists(config.flash.file))
             {
                 Console.WriteLine("数据文件 {0} 不存在", config.flash.file);
