@@ -2,37 +2,15 @@
 using NLog.Targets.Wrappers;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LockFlashRW
 {
     internal class Program
     {
-        static void Run(string[] args)
+        static void Run(ConfigFile config)
         {
-            string configPath;
-            if (args.Length > 0)
-                configPath = args[0];
-            else
-                configPath = "config.json";
-
-            if (!File.Exists(configPath))
-            {
-                Console.WriteLine("配置文件 {0} 不存在", configPath);
-                return;
-            }
-
-            ConfigFile config = new ConfigFile(configPath);
-            string r = config.Check();
-            if (r != "")
-            {
-                Console.WriteLine(r);
-                return;
-            }
-
-            Logger logger = LogManager.GetCurrentClassLogger();
-            logger.Info("读取配置文件 {0} 成功", configPath);
-
             if (!File.Exists(config.flash.file))
             {
                 Console.WriteLine("数据文件 {0} 不存在", config.flash.file);
@@ -44,13 +22,57 @@ namespace LockFlashRW
             t.Wait();
         }
 
+        static ConfigFile ReadConfig(string[] args)
+        {
+            string configPath;
+            if (args.Length > 0)
+                configPath = args[0];
+            else
+                configPath = "config.json";
+
+            if (!File.Exists(configPath))
+            {
+                Console.WriteLine("配置文件 {0} 不存在", configPath);
+                return null;
+            }
+
+            ConfigFile config = new ConfigFile(configPath);
+            string r = config.Check();
+            if (r != "")
+            {
+                Console.WriteLine(r);
+                return null;
+            }
+
+            Logger logger = LogManager.GetCurrentClassLogger();
+            logger.Info("读取配置文件 {0} 成功", configPath);
+
+            return config;
+        }
+
         static void Main(string[] args)
         {
             ConfigNLog();
-            Run(args);
 
-            Console.WriteLine("按任意键退出");
-            Console.ReadKey();
+            ConfigFile config = ReadConfig(args);
+            if (config == null)
+            {
+                Console.WriteLine("按任意键退出");
+                Console.ReadKey();
+                return;
+            }
+
+            while (true)
+            {
+                Run(config);
+                Thread.Sleep(200);
+
+                Console.WriteLine();
+                Console.WriteLine("==== 按空格键重新开始，按其他键退出 ====");
+                ConsoleKeyInfo key = Console.ReadKey();
+                if (key.Key != ConsoleKey.Spacebar)
+                    break;
+            }
         }
 
         static void ConfigNLog()
