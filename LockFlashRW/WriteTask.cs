@@ -21,6 +21,8 @@ namespace LockFlashRW
 
         private byte waitingCommand = (byte)SerialPacket.Command.INVALID;
         private readonly EventWaitHandle eventWaitHandle;
+        private DateTime lastShown = DateTime.MinValue;
+        private int lastPct = -1;
 
         public WriteTask(ConfigFile cfg)
         {
@@ -126,9 +128,14 @@ namespace LockFlashRW
             double sec = (DateTime.Now - t0).TotalSeconds;
             const int width = 20;
             int filled = (int)((long)pct * width / 100);
-            string bar = new string('█', filled) + new string('░', width - filled);
+            string bar = new string('#', filled) + new string('-', width - filled);
             string label = (done >= total) ? "烧写完成" : "进度";
-            Console.Write("\r{0,-4} {1,3}% [{2}] 已用 {3}", label, pct, bar, TimeSpan.FromSeconds(sec).ToString(@"hh\:mm\:ss"));
+            if (pct != lastPct || (DateTime.Now - lastShown).TotalMilliseconds >= 500)
+            {
+                Console.Write("\r{0,-4} {1,3}% [{2}] 已用 {3}", label, pct, bar, TimeSpan.FromSeconds(sec).ToString(@"hh\:mm\:ss"));
+                lastPct = pct;
+                lastShown = DateTime.Now;
+            }
         }
 
         private bool SendPacket(byte[] packet, SerialPacket.Command cmd)

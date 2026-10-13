@@ -2,6 +2,7 @@
 using NLog.Targets.Wrappers;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,12 @@ namespace LockFlashRW
 {
     internal class Program
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleOutputCP(uint wCodePageID);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleCP(uint wCodePageID);
+
         static void Run(ConfigFile config)
         {
             if (config.flash.command.Trim() != "write")
@@ -59,7 +66,22 @@ namespace LockFlashRW
 
         static void Main(string[] args)
         {
-            Console.OutputEncoding = Encoding.UTF8;
+            // 中文 Windows(含 Win7) 用 GBK(936) 最稳：Win7 控制台对 UTF-8(65001) 有已知 bug，且点阵字体不含方块字符
+            try
+            {
+                SetConsoleOutputCP(936);
+                SetConsoleCP(936);
+            }
+            catch { }
+            try
+            {
+                Console.OutputEncoding = Encoding.GetEncoding(936);
+                Console.InputEncoding = Encoding.GetEncoding(936);
+            }
+            catch
+            {
+                Console.OutputEncoding = Encoding.Default;
+            }
             ConfigNLog();
 
             ConfigFile config = ReadConfig(args);
