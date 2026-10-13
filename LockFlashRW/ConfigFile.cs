@@ -5,7 +5,7 @@ namespace LockFlashRW
 {
     public class SpiPort
     {
-        private const byte PORT_MAX_NO = 3;
+        private const byte PORT_MAX_NO = 4;
         private const byte PIN_MAX_NO = 15;
 
         public byte port { get; set; }

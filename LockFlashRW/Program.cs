@@ -2,6 +2,7 @@
 using NLog.Targets.Wrappers;
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,6 +59,7 @@ namespace LockFlashRW
 
         static void Main(string[] args)
         {
+            Console.OutputEncoding = Encoding.UTF8;
             ConfigNLog();
 
             ConfigFile config = ReadConfig(args);
@@ -68,17 +70,10 @@ namespace LockFlashRW
                 return;
             }
 
-            while (true)
-            {
-                Run(config);
-                Thread.Sleep(200);
+            Run(config);
 
-                Console.WriteLine();
-                Console.WriteLine("==== 按空格键重新开始，按其他键退出 ====");
-                ConsoleKeyInfo key = Console.ReadKey();
-                if (key.Key != ConsoleKey.Spacebar)
-                    break;
-            }
+            Console.WriteLine("按任意键退出");
+            Console.ReadKey();
         }
 
         static void ConfigNLog()
@@ -88,10 +83,12 @@ namespace LockFlashRW
             var config = new NLog.Config.LoggingConfiguration();
 
             // Targets where to log to: File and DebugOutput
+            string logDir = "logs";
+            Directory.CreateDirectory(logDir);
             var logfile = new NLog.Targets.FileTarget("logfile")
             {
-                FileName = string.Format("log_{0}.txt",
-                    date.ToString("yyyyMMdd_HHmmss"))
+                FileName = string.Format("{0}\\log_{1}.txt",
+                    logDir, date.ToString("yyyyMMdd_HHmmss"))
             };
             var logdebug = new NLog.Targets.DebugSystemTarget();
             var logconsole = new NLog.Targets.ConsoleTarget();
@@ -99,7 +96,7 @@ namespace LockFlashRW
             // Rules for mapping loggers to targets
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, new AsyncTargetWrapper(logdebug));
             config.AddRule(LogLevel.Info, LogLevel.Fatal, new AsyncTargetWrapper(logfile));
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new AsyncTargetWrapper(logconsole));
+            config.AddRule(LogLevel.Error, LogLevel.Fatal, new AsyncTargetWrapper(logconsole));
 
             // Apply config           
             LogManager.Configuration = config;

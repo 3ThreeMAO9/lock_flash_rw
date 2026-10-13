@@ -1,32 +1,32 @@
 {
   "uart": {
-    "name": "COM6",
-    "baudrate": 9600
+    "name": "COM7",
+    "baudrate": 921600
   },
   "spi": {
     "cs": {
-      "port": 0,
-      "pin": 0
+      "port": 3,
+      "pin": 4
     },
     "clk": {
-      "port": 0,
-      "pin": 1
+      "port": 3,
+      "pin": 5
     },
     "mosi": {
-      "port": 0,
-      "pin": 2
+      "port": 3,
+      "pin": 6
     },
     "miso": {
-      "port": 0,
-      "pin": 3
+      "port": 3,
+      "pin": 7
     }
   },
   "flash": {
     "command": "write",
-    "file": "E:\\test.bin",
+    "file": "118-20261012-addend.bin",
     "address": 0
   },
-  "retry": 1000,
-  "max": 1024,
+  "retry": 3000,
+  "max": 4096,
   "dump": false
 }

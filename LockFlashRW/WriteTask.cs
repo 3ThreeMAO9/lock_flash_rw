@@ -51,7 +51,12 @@ namespace LockFlashRW
                     int offset = 0;
                     int rest = data.Length;
 
-                    Console.WriteLine("打开串口{0}", config.uart.name);
+                    string cs = string.Format("{0}.{1}", config.spi.cs.port, config.spi.cs.pin);
+                    string clk = string.Format("{0}.{1}", config.spi.clk.port, config.spi.clk.pin);
+                    string mosi = string.Format("{0}.{1}", config.spi.mosi.port, config.spi.mosi.pin);
+                    string miso = string.Format("{0}.{1}", config.spi.miso.port, config.spi.miso.pin);
+                    Console.WriteLine("开始烧写: 串口 {0}, 波特率{1}, cs[{2}] clk[{3}] mosi[{4}] miso[{5}], 文件 {6}, 共 {7} 字节",
+                        config.uart.name, config.uart.baudrate, cs, clk, mosi, miso, config.flash.file, data.Length);
                     comport.Open();
 
                     logger.Info("设置SPI");
@@ -62,23 +67,29 @@ namespace LockFlashRW
                         return;
                     }
 
+                    DateTime t0 = DateTime.Now;
+                    int total = data.Length;
                     while (rest > 0)
                     {
                         int tx = rest > config.max ? config.max : rest;
-                        logger.Info("写入数据, 偏移={0}, 长度={1}", offset, tx);
                         packet = SerialPacket.FlashEraseAndWrite(data, addr, offset, (ushort)tx);
                         if (!SendPacket(packet, SerialPacket.Command.FLASH_ERASE_AND_WRITE))
                         {
-                            logger.Error("写入失败");
+                            logger.Error("写入失败, 偏移={0}", offset);
                             return;
                         }
 
                         addr += tx;
                         offset += tx;
                         rest -= tx;
+                        ShowProgress(offset, total, t0);
                     }
 
-                    logger.Info("写入完成");
+                    ShowProgress(total, total, t0);
+                    Console.WriteLine();
+                    double sec = (DateTime.Now - t0).TotalSeconds;
+                    string elapsed = TimeSpan.FromSeconds(sec).ToString(@"hh\:mm\:ss");
+                    logger.Info("写入完成, 用时 {0}", elapsed);
                 }
                 catch (Exception ex)
                 {
@@ -107,6 +118,17 @@ namespace LockFlashRW
             foreach (byte b in buf)
                 builder.AppendFormat(" {0:X2}", b);
             logger.Debug(builder.ToString());
+        }
+
+        private void ShowProgress(int done, int total, DateTime t0)
+        {
+            int pct = total <= 0 ? 100 : (int)((long)done * 100 / total);
+            double sec = (DateTime.Now - t0).TotalSeconds;
+            const int width = 20;
+            int filled = (int)((long)pct * width / 100);
+            string bar = new string('█', filled) + new string('░', width - filled);
+            string label = (done >= total) ? "烧写完成" : "进度";
+            Console.Write("\r{0,-4} {1,3}% [{2}] 已用 {3}", label, pct, bar, TimeSpan.FromSeconds(sec).ToString(@"hh\:mm\:ss"));
         }
 
         private bool SendPacket(byte[] packet, SerialPacket.Command cmd)
